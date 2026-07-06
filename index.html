@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git & GitHub チートシート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b1420;
+    --bg-soft: #101c2c;
+    --card: #efe8d6;
+    --card-edge: #ddd3b8;
+    --ink: #1b2430;
+    --ink-soft: #4a5568;
+    --paper: #edeae0;
+    --paper-dim: #a9b3c2;
+    --amber: #e8a33d;
+    --teal: #3fa796;
+    --line: rgba(237,234,224,0.16);
+    --radius: 14px;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans JP', sans-serif;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--paper);
+    font-family: var(--sans);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a{ color: inherit; }
+
+  /* ---------- HERO ---------- */
+
+  .hero{
+    padding: 88px 24px 64px;
+    max-width: 760px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .terminal{
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    text-align: left;
+    max-width: 480px;
+    margin: 0 auto 40px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -30px rgba(0,0,0,0.6);
+  }
+
+  .terminal-bar{
+    display:flex;
+    gap: 7px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .terminal-bar span{
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #3a4658;
+  }
+
+  .terminal-body{
+    padding: 22px 20px 26px;
+    font-family: var(--mono);
+    font-size: 15px;
+    min-height: 26px;
+    color: #c9d4e0;
+  }
+
+  .terminal-body .prompt{ color: var(--teal); }
+  .terminal-body .path{ color: var(--amber); }
+  .cursor{
+    display:inline-block;
+    color: var(--amber);
+    animation: blink 1s step-end infinite;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .cursor{ animation: none; }
+  }
+  @keyframes blink{ 50%{ opacity: 0; } }
+
+  .hero h1{
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: clamp(30px, 5vw, 46px);
+    letter-spacing: -0.01em;
+    margin: 0 0 14px;
+  }
+
+  .hero h1 em{
+    font-style: normal;
+    color: var(--amber);
+  }
+
+  .hero p.lede{
+    color: var(--paper-dim);
+    font-size: 17px;
+    max-width: 460px;
+    margin: 0 auto;
+  }
+
+  .hero .tag{
+    display:inline-block;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--teal);
+    border: 1px solid rgba(63,167,150,0.4);
+    background: rgba(63,167,150,0.08);
+    padding: 5px 12px;
+    border-radius: 100px;
+    margin-bottom: 22px;
+  }
+
+  /* ---------- GRAPH LAYOUT ---------- */
+
+  main{
+    position: relative;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 20px 24px 100px;
+  }
+
+  .graph-line{
+    position: absolute;
+    left: 40px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, transparent, var(--line) 4%, var(--line) 96%, transparent);
+  }
+
+  @media (max-width: 640px){
+    .graph-line{ left: 18px; }
+  }
+
+  .node{
+    position: relative;
+    padding-left: 84px;
+    margin-bottom: 56px;
+  }
+
+  @media (max-width: 640px){
+    .node{ padding-left: 46px; }
+  }
+
+  .node:last-child{ margin-bottom: 0; }
+
+  .node-dot{
+    position: absolute;
+    left: 40px;
+    top: 6px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--amber);
+    transform: translateX(-50%);
+    transition: box-shadow 0.4s ease;
+  }
+
+  @media (max-width: 640px){
+    .node-dot{ left: 18px; width: 13px; height: 13px; }
+  }
+
+  .node.in-view .node-dot{
+    box-shadow: 0 0 0 6px rgba(232,163,61,0.15);
+  }
+
+  .node-label{
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin: 0 0 6px;
+  }
+
+  .card{
+    background: var(--card);
+    color: var(--ink);
+    border-radius: var(--radius);
+    border: 1px solid var(--card-edge);
+    padding: 26px 26px 10px;
+    box-shadow: 0 24px 48px -30px rgba(0,0,0,0.55);
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  .node.in-view .card{
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .card{ opacity: 1; transform: none; transition: none; }
+  }
+
+  .card h2{
+    font-family: var(--mono);
+    font-size: 20px;
+    margin: 0 0 4px;
+  }
+
+  .card .desc{
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    margin: 0 0 18px;
+  }
+
+  .cmd-row{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-top: 1px solid var(--card-edge);
+  }
+
+  .cmd-row:last-child{ padding-bottom: 16px; }
+
+  .cmd-main{ flex: 1; min-width: 0; }
+
+  .cmd-main code{
+    display: block;
+    font-family: var(--mono);
+    font-size: 14.5px;
+    font-weight: 600;
+    color: #0f3d38;
+    background: rgba(63,167,150,0.13);
+    padding: 5px 10px;
+    border-radius: 6px;
+    width: fit-content;
+    word-break: break-word;
+  }
+
+  .cmd-main p{
+    margin: 8px 2px 0;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+
+  .copy-btn{
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-size: 12px;
+    background: transparent;
+    border: 1px solid var(--card-edge);
+    color: var(--ink-soft);
+    padding: 7px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .copy-btn:hover{
+    border-color: var(--teal);
+    color: #0f3d38;
+    background: rgba(63,167,150,0.15);
+  }
+
+  .copy-btn:focus-visible{
+    outline: 2px solid var(--teal);
+    outline-offset: 2px;
+  }
+
+  .copy-btn.copied{
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #fff;
+  }
+
+  footer{
+    text-align: center;
+    padding: 40px 24px 60px;
+    color: var(--paper-dim);
+    font-size: 13px;
+    font-family: var(--mono);
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="terminal">
+    <div class="terminal-bar"><span></span><span></span><span></span></div>
+    <div class="terminal-body">
+      <span class="prompt">$</span> <span id="typewriter"></span><span class="cursor">▌</span>
+    </div>
+  </div>
+  <span class="tag">Quick Reference</span>
+  <h1>Git & GitHub<br><em>チートシート</em></h1>
+  <p class="lede">最初のセットアップから、うっかりの取り消し方まで。<br>コマンド右の「コピー」でそのまま貼り付けできます。</p>
+</header>
+
+<main>
+  <div class="graph-line" aria-hidden="true"></div>
+
+  <section class="node" data-title="setup">
+    <div class="node-dot"></div>
+    <p class="node-label">Step 1 — はじめの一歩</p>
+    <div class="card">
+      <h2>セットアップ</h2>
+      <p class="desc">Gitを使い始めるときに、最初の一度だけ行う設定たち。</p>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git init">git init</code>
+          <p>今いるフォルダを、新しいGitリポジトリとして初期化する</p>
+        </div>
+        <button class="copy-btn" data-copy="git init">コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git clone https://github.com/user/repo.git">git clone &lt;URL&gt;</code>
+          <p>すでにあるリポジトリを、自分のパソコンに複製してくる</p>
+        </div>
+        <button class="copy-btn" data-copy="git clone https://github.com/user/repo.git">コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd='git config --global user.name "Your Name"'>git config --global user.name "名前"</code>
+          <p>コミットに記録される、あなたの名前を設定する</p>
+        </div>
+        <button class="copy-btn" data-copy='git config --global user.name "Your Name"'>コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd='git config --global user.email "you@example.com"'>git config --global user.email "メール"</code>
+          <p>コミットに記録される、あなたのメールアドレスを設定する</p>
+        </div>
+        <button class="copy-btn" data-copy='git config --global user.email "you@example.com"'>コピー</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="node" data-title="daily">
+    <div class="node-dot"></div>
+    <p class="node-label">Step 2 — 日々の記録</p>
+    <div class="card">
+      <h2>日常のワークフロー</h2>
+      <p class="desc">ファイルを変更したあと、その変更を記録として残すための基本コマンド。</p>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git status">git status</code>
+          <p>今どのファイルが変更されているか、状態を確認する</p>
+        </div>
+        <button class="copy-btn" data-copy="git status">コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git add .">git add .</code>
+          <p>変更したファイルすべてを、記録の対象に加える</p>
+        </div>
+        <button class="copy-btn" data-copy="git add .">コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd='git commit -m "message"'>git commit -m "メッセージ"</code>
+          <p>加えた変更に、ひとまとまりの記録(コミット)として名前をつけて保存する</p>
+        </div>
+        <button class="copy-btn" data-copy='git commit -m "message"'>コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git log --oneline">git log --oneline</code>
+          <p>これまでのコミットの履歴を、1行ずつ簡潔に表示する</p>
+        </div>
+        <button class="copy-btn" data-copy="git log --oneline">コピー</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="node" data-title="branch">
+    <div class="node-dot"></div>
+    <p class="node-label">Step 3 — 枝分かれ</p>
+    <div class="card">
+      <h2>ブランチを操る</h2>
+      <p class="desc">試したい変更を、メインの履歴から分けて作業するための仕組み。</p>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git branch">git branch</code>
+          <p>今あるブランチの一覧を表示する</p>
+        </div>
+        <button class="copy-btn" data-copy="git branch">コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git switch -c feature-name">git switch -c &lt;名前&gt;</code>
+          <p>新しいブランチを作り、そのままそこへ移動する</p>
+        </div>
+        <button class="copy-btn" data-copy="git switch -c feature-name">コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git switch main">git switch &lt;名前&gt;</code>
+          <p>指定したブランチへ移動する</p>
+        </div>
+        <button class="copy-btn" data-copy="git switch main">コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git merge feature-name">git merge &lt;名前&gt;</code>
+          <p>指定したブランチの変更を、今いるブランチに取り込む</p>
+        </div>
+        <button class="copy-btn" data-copy="git merge feature-name">コピー</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="node" data-title="undo">
+    <div class="node-dot"></div>
+    <p class="node-label">Step 4 — やり直し</p>
+    <div class="card">
+      <h2>元に戻す</h2>
+      <p class="desc">うっかりミスをしても大丈夫。落ち着いて、状況に合った方法を選ぶ。</p>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git restore file.txt">git restore &lt;ファイル&gt;</code>
+          <p>まだコミットしていない変更を、直前の状態に戻す</p>
+        </div>
+        <button class="copy-btn" data-copy="git restore file.txt">コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git reset --soft HEAD~1">git reset --soft HEAD~1</code>
+          <p>直前のコミットを取り消す(変更内容はそのまま残る)</p>
+        </div>
+        <button class="copy-btn" data-copy="git reset --soft HEAD~1">コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git revert HEAD">git revert &lt;コミット&gt;</code>
+          <p>過去のコミットを打ち消す、新しいコミットを作る(履歴を残したまま安全に戻す)</p>
+        </div>
+        <button class="copy-btn" data-copy="git revert HEAD">コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git stash">git stash</code>
+          <p>作業中の変更を、いったん脇にどかして保管しておく</p>
+        </div>
+        <button class="copy-btn" data-copy="git stash">コピー</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="node" data-title="remote">
+    <div class="node-dot"></div>
+    <p class="node-label">Step 5 — つながる</p>
+    <div class="card">
+      <h2>GitHubと連携する</h2>
+      <p class="desc">手元の記録を、GitHub上のリポジトリと行き来させる。</p>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git remote add origin https://github.com/user/repo.git">git remote add origin &lt;URL&gt;</code>
+          <p>手元のリポジトリに、GitHub上の場所を「origin」として登録する</p>
+        </div>
+        <button class="copy-btn" data-copy="git remote add origin https://github.com/user/repo.git">コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git push -u origin main">git push -u origin main</code>
+          <p>手元の記録をGitHubへ送る(以後は git push だけでよくなる)</p>
+        </div>
+        <button class="copy-btn" data-copy="git push -u origin main">コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git pull">git pull</code>
+          <p>GitHub上の最新の変更を、手元に取り込む</p>
+        </div>
+        <button class="copy-btn" data-copy="git pull">コピー</button>
+      </div>
+
+      <div class="cmd-row">
+        <div class="cmd-main">
+          <code data-cmd="git remote -v">git remote -v</code>
+          <p>今どこと連携しているか、登録済みの接続先を確認する</p>
+        </div>
+        <button class="copy-btn" data-copy="git remote -v">コピー</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>made for beginners — commands over comprehension</footer>
+
+<script>
+  // タイプライター風の演出(先頭の端末風の見た目)
+  (function(){
+    var el = document.getElementById('typewriter');
+    var text = 'git checkout -b my-first-branch';
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce){ el.textContent = text; return; }
+    var i = 0;
+    function tick(){
+      if(i <= text.length){
+        el.textContent = text.slice(0, i);
+        i++;
+        setTimeout(tick, 38);
+      }
+    }
+    tick();
+  })();
+
+  // コピー機能
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var value = btn.getAttribute('data-copy');
+      var restore = btn.textContent;
+      function done(ok){
+        btn.textContent = ok ? 'コピーしました' : 'コピー失敗';
+        btn.classList.toggle('copied', ok);
+        setTimeout(function(){
+          btn.textContent = restore;
+          btn.classList.remove('copied');
+        }, 1400);
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(value).then(function(){ done(true); }).catch(function(){ done(false); });
+      } else {
+        try{
+          var ta = document.createElement('textarea');
+          ta.value = value;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          done(true);
+        }catch(e){ done(false); }
+      }
+    });
+  });
+
+  // スクロールで各カードをふわっと表示
+  var nodes = document.querySelectorAll('.node');
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          entry.target.classList.add('in-view');
+        }
+      });
+    }, { threshold: 0.2 });
+    nodes.forEach(function(n){ io.observe(n); });
+  } else {
+    nodes.forEach(function(n){ n.classList.add('in-view'); });
+  }
+</script>
+
+</body>
+</html>
